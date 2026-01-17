@@ -40,6 +40,8 @@ For more info about cloudscale custom images see: https://www.cloudscale.ch/en/a
 
 ## What it configures
 
+The following values are examples.
+
 ### /etc/myname
 ```
 server.example.com
