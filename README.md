@@ -19,19 +19,24 @@ This script runs on first boot via `/etc/rc.firsttime` and configures:
 
 The OpenBSD template image must have:
 
-1. An `openbsd` user with `/home/openbsd/.ssh/authorized_keys` present
+1. An `openbsd` user configured (the script installs SSH keys to `/home/openbsd/.ssh/authorized_keys`)
 2. Network configured for DHCP initially (to obtain IPv4 before script runs)
-3. This script installed as `/etc/rc.firsttime`
+3. This script appended to `/etc/rc.firsttime`
 
-## Installation
+## Building a template
 
-Append the script to the existing `/etc/rc.firsttime` (which contains fw_update and syspatch checks):
+You can use OpenBSD's integrated virtualization to build a template. See https://www.openbsd.org/faq/faq16.html for details on vmm/vmd.
 
-```sh
-cat rc.firsttime.cloud >> /etc/rc.firsttime
-```
+1. Create a VM with the desired disk size (qcow2 format recommended)
+2. Attach the OpenBSD install CD and boot the VM
+3. Install OpenBSD as usual (network not required, sets are on the CD). Create an `openbsd` user when prompted
+4. When prompted to reboot, switch to the shell instead
+5. Append this script to `/mnt/etc/rc.firsttime`
+6. Create `/mnt/etc/hostname.vio0` with `inet autoconf` and `chmod 0640`
+7. Halt the VM with `halt -p`
+8. Import the qcow2 image into cloudscale.ch
 
-The script runs once on first boot and is automatically deleted by OpenBSD.
+For more info about cloudscale custom images see: https://www.cloudscale.ch/en/api/v1#custom-images
 
 ## What it configures
 
