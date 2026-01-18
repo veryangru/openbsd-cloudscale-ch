@@ -241,6 +241,11 @@ configure_ssh_keys() {
 main() {
 	log "Starting cloud-init configuration"
 
+	# Output SSH host keys for cloudscale.ch console parsing
+	echo "-----BEGIN SSH HOST KEY KEYS-----"
+	cat /etc/ssh/ssh_host_*_key.pub
+	echo "-----END SSH HOST KEY KEYS-----"
+
 	if ! mount_config_drive; then
 		log "Config drive not available, exiting"
 		exit 1
