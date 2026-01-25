@@ -96,7 +96,7 @@ check_prereqs() {
 	[[ -f "${AUTO_INSTALL_CONF}" ]] || die "auto_install.conf not found"
 	[[ -f "${RC_FIRSTTIME}" ]] || die "rc.firsttime.ksh not found"
 	which rdsetroot >/dev/null || die "rdsetroot not found"
-	which mkhybrid >/dev/null || die "mkhybrid not found (install cdrtools)"
+	which mkhybrid >/dev/null || die "mkhybrid not found"
 }
 
 # Build site tgz
