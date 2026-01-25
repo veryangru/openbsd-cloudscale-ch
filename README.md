@@ -14,6 +14,7 @@ This script runs on first boot via `/etc/rc.firsttime` and configures:
 - DNS resolvers
 - SSH authorized keys
 - doas access
+- Firmware updates (via `fw_update`)
 
 ## Template requirements
 
@@ -21,7 +22,7 @@ The OpenBSD template image must have:
 
 1. An `openbsd` user configured (the script installs SSH keys to `/home/openbsd/.ssh/authorized_keys`)
 2. Network configured for DHCP initially (to obtain IPv4 before script runs)
-3. This script appended to `/etc/rc.firsttime`
+3. This script as `/etc/rc.firsttime` (replaces the default, replicating `fw_update` but skipping `syspatch`)
 
 ## Building a template
 
@@ -31,7 +32,7 @@ You can use OpenBSD's integrated virtualization to build a template. See https:/
 2. Attach the OpenBSD install CD and boot the VM
 3. Install OpenBSD as usual (network not required, sets are on the CD). Create an `openbsd` user when prompted
 4. When prompted to reboot, switch to the shell instead
-5. Append this script to `/mnt/etc/rc.firsttime`
+5. Copy this script to `/mnt/etc/rc.firsttime`
 6. Create `/mnt/etc/hostname.vio0` with `inet autoconf` and `chmod 0640`
 7. Halt the VM with `halt -p`
 8. Import the qcow2 image into cloudscale.ch
@@ -80,6 +81,7 @@ The script also:
 
 - Stops and disables `resolvd` (we manage `/etc/resolv.conf` directly)
 - Restarts networking via `sh /etc/netstart`
+- Runs `fw_update` (replicating default `rc.firsttime`, but skipping `syspatch`)
 - Restarts `smtpd` and `syslogd` (depend on hostname)
 
 ## cloudscale.ch-specific design decisions
