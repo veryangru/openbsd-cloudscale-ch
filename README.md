@@ -23,7 +23,26 @@ Additional requirements (DHCP network config, rc.firsttime) are installed automa
 
 ## Building a template
 
-This project includes tools to build a fully automated OpenBSD template image using vmd. See https://www.openbsd.org/faq/faq16.html for details on vmm/vmd.
+There are two approaches to building a template:
+
+1. **Automated** (requires OpenBSD) - Use the included `repack-iso.ksh` script to create an autoinstall ISO that handles everything unattended
+2. **Manual** (any platform) - Boot the standard OpenBSD installer in any VM and configure the template by hand
+
+### Manual installation
+
+If you don't have access to an OpenBSD machine to run the build scripts, you can create a template manually using any virtualization platform (QEMU, VirtualBox, VMware, etc.):
+
+1. Boot the official OpenBSD install ISO
+2. Run through the installer, creating an `openbsd` user when prompted
+3. When the installer finishes and asks what to do next, choose shell
+4. Ensure `/mnt/etc/hostname.vio0` contains `inet autoconf` (DHCP is required for initial boot)
+5. Copy `rc.firsttime.ksh` to `/mnt/etc/rc.firsttime`
+6. Shut down and convert/export the disk image to qcow2 format
+7. Upload to cloudscale.ch as a custom image
+
+### Automated build
+
+This section describes the automated approach using vmd. See https://www.openbsd.org/faq/faq16.html for details on vmm/vmd.
 
 ### Prerequisites
 
