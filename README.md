@@ -6,7 +6,7 @@ This project is not affiliated with cloudscale.ch.
 
 ## Overview
 
-This script runs on first boot via `/etc/rc.firsttime` and configures:
+The provided `rc.firsttime` script runs on first boot and configures:
 
 - Hostname (FQDN)
 - Network interface (IPv4 + IPv6)
@@ -14,32 +14,80 @@ This script runs on first boot via `/etc/rc.firsttime` and configures:
 - DNS resolvers
 - SSH authorized keys
 - doas access
-- Firmware updates (via `fw_update`)
 
 ## Template requirements
 
-The OpenBSD template image must have:
+The OpenBSD template image must have an `openbsd` user configured (the script installs SSH keys to `/home/openbsd/.ssh/authorized_keys`). The autoinstall process handles this via `auto_install.conf`. If you build the template on your own, make sure to create the openbsd user when asked by the installer.
 
-1. An `openbsd` user configured (the script installs SSH keys to `/home/openbsd/.ssh/authorized_keys`)
-2. Network configured for DHCP initially (to obtain IPv4 before script runs)
-3. This script as `/etc/rc.firsttime` (replaces the default, replicating `fw_update` but skipping `syspatch`)
+Additional requirements (DHCP network config, rc.firsttime) are installed automatically via `site78.tgz`.
 
 ## Building a template
 
-You can use OpenBSD's integrated virtualization to build a template. See https://www.openbsd.org/faq/faq16.html for details on vmm/vmd.
+This project includes tools to build a fully automated OpenBSD template image using vmd. See https://www.openbsd.org/faq/faq16.html for details on vmm/vmd.
 
-1. Create a VM with the desired disk size (qcow2 format recommended)
-2. Attach the OpenBSD install CD and boot the VM
-3. Install OpenBSD as usual (network not required, sets are on the CD). Create an `openbsd` user when prompted
-4. When prompted to reboot, switch to the shell instead
-5. Copy this script to `/mnt/etc/rc.firsttime`
-6. Create `/mnt/etc/hostname.vio0` with `inet autoconf` and `chmod 0640`
-7. Halt the VM with `halt -p`
-8. Import the qcow2 image into cloudscale.ch
+### Prerequisites
 
-For more info about cloudscale custom images see: https://www.cloudscale.ch/en/api/v1#custom-images
+An OpenBSD machine is required to build the template. `vnd0`/`vnd1` are used by the script, make sure these are free. Enable vmd:
 
-## What it configures
+```
+doas rcctl enable vmd
+doas rcctl start vmd
+```
+
+### Create the autoinstall ISO
+
+Run the repack script. It will download and verify the OpenBSD ISO if not already present. The script uses `doas` and can be run as a normal user. If you don't have `persist` or `nopass` configured, you may be asked for your password multiple times.
+
+```
+./repack-iso.ksh
+```
+
+This creates `install78-autoinstall.iso` with:
+- `auto_install.conf` embedded in bsd.rd for unattended installation
+- `site78.tgz` custom site set
+
+### site78.tgz layout
+
+The site set is extracted after all other sets and contains:
+
+```
+etc/
+    hostname.vio0    # inet autoconf (DHCP for initial IPv4)
+    installurl       # fast mirror (picked after manual speed tests)
+    rc.firsttime     # cloud-init replacement script
+```
+
+### Create the template image
+
+Create a qcow2 disk image:
+
+```
+vmctl create -s 25G openbsd78.qcow2
+```
+
+Start the VM with the autoinstall ISO:
+
+```
+doas vmctl start -m 4G -r install78-autoinstall.iso -d openbsd78.qcow2 openbsd-template
+```
+
+Connect to the console to watch progress:
+
+```
+doas vmctl console openbsd-template
+```
+
+The installer runs automatically and reboots when complete. When the boot loader appears, press any key other than enter to prevent boot, then exit the console with `~.` and stop the VM:
+
+```
+doas vmctl stop openbsd-template
+```
+
+### Upload to cloudscale.ch
+
+Import the qcow2 image into cloudscale.ch. See: https://www.cloudscale.ch/en/api/v1#custom-images
+
+## What `rc.firsttime` configures
 
 The following values are examples.
 
@@ -81,8 +129,9 @@ The script also:
 
 - Stops and disables `resolvd` (we manage `/etc/resolv.conf` directly)
 - Restarts networking via `sh /etc/netstart`
-- Runs `fw_update` (replicating default `rc.firsttime`, but skipping `syspatch`)
 - Restarts `smtpd` and `syslogd` (depend on hostname)
+
+Note: The OpenBSD installer appends `fw_update` and `syspatch` to `/etc/rc.firsttime`, so these run automatically after our script completes.
 
 ## cloudscale.ch-specific design decisions
 
@@ -113,7 +162,7 @@ The script reads from the config drive mounted at `/dev/cd0c`:
 
 ## Tested
 
-2026-01-17 with OpenBSD 7.8 on cloudscale.ch
+2026-01-25 with OpenBSD 7.8 on cloudscale.ch
 
 ## License
 

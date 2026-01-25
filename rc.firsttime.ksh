@@ -6,7 +6,7 @@
 # script was created to avoid its many dependencies.
 #
 # Replaces /etc/rc.firsttime and runs on first boot
-# Configures: hostname, network, DNS, SSH keys, firmware
+# Configures: hostname, network, DNS, SSH keys
 #
 # Not affiliated with cloudscale.ch.
 #
@@ -278,10 +278,6 @@ main() {
 	# Restart networking
 	log "Restarting network"
 	sh /etc/netstart
-
-	# Update firmware (replicating default rc.firsttime, skipping syspatch)
-	log "Updating firmware"
-	/usr/sbin/fw_update
 
 	# Restart services that depend on hostname
 	log "Restarting services for hostname change"
